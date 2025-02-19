@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 상세 조회</title>
+    <link rel="stylesheet" href="assets/css/post-detail.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button onclick="goBack()">←</button>
+            <h1>아무 말 대잔치</h1>
+        </header>
+        
+        <main class="post-detail">
+            <h2 id="post-title">제목 1</h2>
+            <div class="post-meta">
+                <span class="author">더미 작성자 1</span>
+                <span class="date">2021-01-01 00:00:00</span>
+            </div>
+            <div class="post-content">
+                <p>여기에 게시글 내용이 들어갑니다.</p>
+            </div>
+            <div class="post-actions">
+                <button id="edit-btn">수정</button>
+                <button id="delete-btn">삭제</button>
+            </div>
+            <div class="post-stats">
+                <button id="like-btn" class="like-button">123 좋아요</button>
+                <span id="view-count">123 조회수</span>
+                <span id="comment-count">123 댓글</span>
+            </div>
+            
+            <div class="comment-section">
+                <input type="text" id="comment-input" placeholder="댓글을 남겨주세요!">
+                <button id="comment-submit" disabled>댓글 등록</button>
+                <ul id="comment-list">
+                    <li>
+                        <span class="comment-author">더미 작성자</span>
+                        <span class="comment-text">댓글 내용</span>
+                        <button class="comment-edit">수정</button>
+                        <button class="comment-delete">삭제</button>
+                    </li>
+                </ul>
+            </div>
+        </main>
+    </div>
+
+    <!-- 게시글 삭제 모달 -->
+    <div id="delete-modal" class="modal hidden">
+        <p>게시글을 삭제하시겠습니까?<br>삭제한 내용은 복구할 수 없습니다.</p>
+        <button id="cancel-delete">취소</button>
+        <button id="confirm-delete">확인</button>
+    </div>
+
+    <script src="assets/js/post-detail.js"></script>
+</body>
+</html>
