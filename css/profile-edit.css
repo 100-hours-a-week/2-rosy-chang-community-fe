@@ -1,0 +1,324 @@
+/* 회원정보 수정 페이지 스타일 */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Noto Sans KR', sans-serif;
+    background-color: #f5f5f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+/* 헤더 스타일 */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    position: relative;
+}
+
+.main-title {
+    font-size: 24px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0;
+    flex-grow: 1;
+}
+
+/* 프로필 드롭다운 */
+.profile-dropdown {
+    position: relative;
+}
+
+.profile-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+    background: none;
+}
+
+.profile-button img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 45px;
+    right: 0;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    min-width: 150px;
+    display: none;
+    z-index: 10;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.dropdown-item:hover {
+    background-color: #E9E9E9;
+}
+
+/* 회원정보 수정 컨테이너 */
+.profile-edit-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.section-title {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+/* 프로필 이미지 섹션 */
+.profile-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.profile-label {
+    align-self: flex-start;
+    font-size: 14px;
+    margin-bottom: 8px;
+    width: 100%;
+    text-align: center;
+}
+
+.profile-upload-area {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.profile-image-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #ccc;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.profile-image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hidden-input {
+    display: none;
+}
+
+/* 폼 스타일 */
+.profile-edit-form {
+    width: 100%;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    position: relative;
+    width: 100%;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
+
+.email-display {
+    width: 100%;
+    padding: 10px;
+    background-color: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    color: #666;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #7F6AEE;
+}
+
+/* 헬퍼 텍스트 */
+.helper-text {
+    color: #FF4949;
+    font-size: 12px;
+    margin-top: 4px;
+    margin-bottom: 0;
+    visibility: hidden;
+    min-height: 16px;
+    text-align: left;
+    width: 100%;
+}
+
+/* 버튼 스타일 */
+.submit-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #7F6AEE;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.submit-button:hover {
+    background-color: #6A57D4;
+}
+
+.withdraw-button {
+    width: 100%;
+    padding: 12px;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.withdraw-button:hover {
+    background-color: #f5f5f5;
+}
+
+/* 토스트 메시지 */
+.toast-message {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: none;
+}
+
+.toast-button {
+    padding: 12px 20px;
+    background-color: #B197FC;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 회원 탈퇴 모달 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    display: none;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.modal-description {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.cancel-button, .confirm-button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.cancel-button {
+    background-color: #333;
+    color: white;
+    border: none;
+}
+
+.confirm-button {
+    background-color: #B197FC;
+    color: white;
+    border: none;
+}

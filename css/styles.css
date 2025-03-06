@@ -1,0 +1,89 @@
+/* 전체 스타일 리셋 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Noto Sans KR', sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+/* 폼 요소 공통 스타일 */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #4a90e2;
+}
+
+.helper-text {
+    color: #f03e3e;
+    font-size: 12px;
+    margin-top: 4px;
+    visibility: hidden; /* 초기에는 숨김 처리 */
+}
+
+/* 버튼 공통 스타일 */
+.primary-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #5468ff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.primary-button:hover {
+    background-color: #4054e9;
+}
+
+.secondary-button {
+    width: 100%;
+    padding: 12px;
+    background-color: white;
+    color: #333;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.secondary-button:hover {
+    background-color: #f5f5f5;
+}

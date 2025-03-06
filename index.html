@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아무 말 대잔치</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/post-list.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="main-title">아무 말 대잔치</h1>
+            <div class="profile-dropdown">
+                <button id="profileDropdownBtn" class="profile-button">
+                    <img src="assets/images/profile-placeholder.jpg" alt="프로필" id="headerProfileImage">
+                </button>
+                <div class="dropdown-menu" id="profileDropdownMenu">
+                    <a href="profile-edit.html" class="dropdown-item">회원정보수정</a>
+                    <a href="password-edit.html" class="dropdown-item">비밀번호수정</a>
+                    <a href="#" class="dropdown-item" id="logoutBtn">로그아웃</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="post-list-container">
+            <div class="welcome-message">
+                <p class="greeting">안녕하세요,</p>
+                <p class="user-welcome">아무 말 대잔치 <span class="user-nickname">게시판</span> 입니다.</p>
+            </div>
+
+            <div class="create-post-section">
+                <button id="createPostBtn" class="create-post-button">게시글 작성</button>
+            </div>
+
+            <div class="post-list" id="postList">
+                <!-- 게시글 목록이 동적으로 추가됨 -->
+            </div>
+
+            <!-- 로딩 인디케이터 -->
+            <div id="loadingIndicator" class="loading-indicator">
+                <div class="loading-spinner"></div>
+                <p>게시글을 불러오는 중입니다...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- 게시글 카드 템플릿 -->
+    <template id="postCardTemplate">
+        <div class="post-card">
+            <div class="post-info">
+                <h2 class="post-title"></h2>
+                <div class="post-meta">
+                    <span class="likes-count">좋아요 <span class="count">0</span></span>
+                    <span class="comments-count">댓글 <span class="count">0</span></span>
+                    <span class="views-count">조회수 <span class="count">0</span></span>
+                    <span class="post-date"></span>
+                </div>
+            </div>
+            <div class="post-author">
+                <div class="author-image">
+                    <img src="assets/images/profile-placeholder.jpg" alt="작성자">
+                </div>
+                <span class="author-name">닉네임</span>
+            </div>
+        </div>
+    </template>
+
+    <script src="js/common.js"></script>
+    <script src="js/post-list.js"></script>
+</body>
+</html>
