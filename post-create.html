@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>아무 말 대잔치 - 게시글 작성</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/post-create.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <button id="backButton" class="back-button">&lt;</button>
+            <h1 class="main-title">아무 말 대잔치</h1>
+            <div class="profile-dropdown">
+                <button id="profileDropdownBtn" class="profile-button">
+                    <img src="assets/images/profile-placeholder.jpg" alt="프로필" id="headerProfileImage">
+                </button>
+                <div class="dropdown-menu" id="profileDropdownMenu">
+                    <a href="profile-edit.html" class="dropdown-item">회원정보수정</a>
+                    <a href="password-edit.html" class="dropdown-item">비밀번호수정</a>
+                    <a href="#" class="dropdown-item" id="logoutBtn">로그아웃</a>
+                </div>
+            </div>
+        </header>
+
+        <main class="post-create-container">
+            <h2 class="section-title">게시글 작성</h2>
+            
+            <form id="postCreateForm" class="post-create-form">
+                <div class="form-group">
+                    <label for="postTitle">제목<span class="required">*</span></label>
+                    <input type="text" id="postTitle" name="title" placeholder="제목을 입력해주세요. (최대 26글자)" maxlength="26">
+                </div>
+                
+                <div class="form-group">
+                    <label for="postContent">내용<span class="required">*</span></label>
+                    <textarea id="postContent" name="content" placeholder="내용을 입력하세요."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="postImages">이미지</label>
+                    <p class="helper-text" id="imageHelperText">* helper text</p>
+                    <div class="image-upload-area">
+                        <button type="button" id="imageUploadBtn" class="image-upload-button">파일 선택</button>
+                        <span id="imageFileName" class="image-file-name">파일을 선택해주세요.</span>
+                    </div>
+                    <input type="file" id="postImages" name="images" accept="image/*" multiple class="hidden-input">
+                </div>
+                
+                <button type="submit" id="submitButton" class="submit-button">완료</button>
+            </form>
+        </main>
+    </div>
+
+    <script src="js/common.js"></script>
+    <script src="js/post-create.js"></script>
+</body>
+</html>
