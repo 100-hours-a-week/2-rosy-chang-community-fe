@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formValidity.email = validateEmail(email);
         }
         
-        validateFormAndToggleButton(formValidity, loginButton);
+        updateButtonState();
     });
     
     // 비밀번호 입력 변경 시 유효성 검사
@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formValidity.password = password.length > 0;
         }
         
-        validateFormAndToggleButton(formValidity, loginButton);
+        updateButtonState();
     });
     
     // 입력 필드에 포커스되면 에러 메시지 숨기기
@@ -129,4 +129,19 @@ document.addEventListener('DOMContentLoaded', function() {
     signupButton.addEventListener('click', function() {
         window.location.href = 'signup.html';
     });
+    
+    // 버튼 상태 업데이트 함수 (validateFormAndToggleButton 대체)
+    function updateButtonState() {
+        if (formValidity.email && formValidity.password) {
+            loginButton.classList.add('active');
+        } else {
+            loginButton.classList.remove('active');
+        }
+    }
+    
+    // 이메일 유효성 검사 함수 (common.js에 없을 경우 사용)
+    function validateEmail(email) {
+        const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        return re.test(email);
+    }
 });
