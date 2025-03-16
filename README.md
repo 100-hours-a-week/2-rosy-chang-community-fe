@@ -63,7 +63,7 @@
 │
 └── assets/
     └── images/                         # 이미지 파일들
-		    ├── profile-placeholder.jpg     # 기본 이미지
+		├── profile-placeholder.jpg     # 기본 이미지
 ```
 
 
