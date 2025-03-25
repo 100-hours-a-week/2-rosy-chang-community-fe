@@ -1,6 +1,6 @@
-// 공통 유틸리티 함수
+// common.js - 공통 유틸리티 함수
 
-// API 기본 URL (서버 주소로 변경 필요)
+// API 기본 URL 설정
 const API_BASE_URL = 'http://localhost:8080';
 
 // API 호출 함수
@@ -366,6 +366,7 @@ function logout() {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
         localStorage.removeItem('nickname');
+        localStorage.removeItem('profileImageUrl');
     }
 }
 
@@ -423,7 +424,7 @@ function initProfileDropdown() {
 function setHeaderProfileImage() {
     const headerProfileImage = document.getElementById('headerProfileImage');
     if (headerProfileImage) {
-        // 로컬 스토리지에서 프로필 이미지 URL 가져오기 (추가 구현 필요)
+        // 로컬 스토리지에서 프로필 이미지 URL 가져오기
         const profileImageUrl = localStorage.getItem('profileImageUrl');
         if (profileImageUrl) {
             headerProfileImage.src = profileImageUrl;

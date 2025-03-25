@@ -1,22 +1,20 @@
-// 회원가입 페이지 관련 JavaScript
+// signup.js - 회원가입 페이지 관련 JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM 요소 참조
     const backButton = document.getElementById('backButton');
     const profilePreview = document.getElementById('profilePreview');
     const profileImage = document.getElementById('profileImage');
+    const profileHelperText = document.getElementById('profileHelperText');
     const signupForm = document.getElementById('signupForm');
-    const signupButton = document.getElementById('signupButton');
-    const loginButton = document.getElementById('loginButton');
-    
-    // 입력 필드 참조
     const emailInput = document.getElementById('email');
     const passwordInput = document.getElementById('password');
     const passwordCheckInput = document.getElementById('passwordCheck');
     const nicknameInput = document.getElementById('nickname');
+    const signupButton = document.getElementById('signupButton');
+    const loginButton = document.getElementById('loginButton');
     
     // 헬퍼 텍스트 참조
-    const profileHelperText = document.getElementById('profileHelperText');
     const emailHelperText = document.getElementById('emailHelperText');
     const passwordHelperText = document.getElementById('passwordHelperText');
     const passwordCheckHelperText = document.getElementById('passwordCheckHelperText');
@@ -54,6 +52,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.files && e.target.files[0]) {
             const file = e.target.files[0];
             uploadedImage = file;
+            
+            // 이미지 파일 검증
+            if (!isValidImageFile(file)) {
+                showHelperText(profileHelperText, '* 이미지 파일만 업로드 가능합니다.');
+                formValidity.profileImage = false;
+                updateSignupButtonState();
+                return;
+            }
             
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -137,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('nickname', nicknameInput.value.trim());
             
             if (uploadedImage) {
-                formData.append('profile_image', uploadedImage);
+                formData.append('profileImage', uploadedImage);
             }
             
             try {
@@ -165,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 showHelperText(passwordCheckHelperText, error.message);
                             } else if (error.field === 'nickname') {
                                 showHelperText(nicknameHelperText, error.message);
-                            } else if (error.field === 'profile_image') {
+                            } else if (error.field === 'profileImage') {
                                 showHelperText(profileHelperText, error.message);
                             }
                         });
@@ -177,11 +183,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('회원가입 요청 오류:', error);
                 alert('서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-                
-                // 테스트 목적으로 로컬 개발 환경에서는 회원가입 성공으로 처리
-                console.log('테스트용 회원가입 처리');
-                alert('(테스트용) 회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
-                window.location.href = 'login.html';
             }
         }
     });

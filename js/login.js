@@ -1,4 +1,4 @@
-// 로그인 페이지 관련 기능
+// login.js - 로그인 페이지 관련 기능
 
 document.addEventListener('DOMContentLoaded', function() {
     // 이미 로그인되어 있는 경우 메인 페이지(게시글 목록)로 이동
@@ -103,6 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('userId', data.data.userId);
                 localStorage.setItem('nickname', data.data.nickname);
                 
+                // 프로필 이미지 URL이 있으면 저장
+                if (data.data.profileImageUrl) {
+                    localStorage.setItem('profileImageUrl', data.data.profileImageUrl);
+                }
+                
                 // 게시글 목록 페이지로 이동
                 window.location.href = 'index.html';
             } else {
@@ -114,14 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('로그인 요청 오류:', error);
             showErrorMessage(passwordHelperText, '* 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-            
-            // 테스트 목적으로 로컬 개발 시 서버 없이 로그인 하기 위한 코드
-            // 실제 서비스에서는 제거 필요
-            console.log('테스트용 로그인 처리');
-            localStorage.setItem('token', 'test-token');
-            localStorage.setItem('userId', '1');
-            localStorage.setItem('nickname', '테스트사용자');
-            window.location.href = 'index.html';
         }
     });
     
@@ -130,18 +127,12 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'signup.html';
     });
     
-    // 버튼 상태 업데이트 함수 (validateFormAndToggleButton 대체)
+    // 버튼 상태 업데이트 함수
     function updateButtonState() {
         if (formValidity.email && formValidity.password) {
             loginButton.classList.add('active');
         } else {
             loginButton.classList.remove('active');
         }
-    }
-    
-    // 이메일 유효성 검사 함수 (common.js에 없을 경우 사용)
-    function validateEmail(email) {
-        const re = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-        return re.test(email);
     }
 });

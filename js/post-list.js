@@ -74,14 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
         showLoading();
         
         try {
-            // 게시글 목록 조회 API 호출
-            const response = await fetch(`${API_BASE_URL}/posts?page=${currentPage}&size=${pageSize}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
+            const response = await fetchAPI(`/posts?page=${currentPage}&size=${pageSize}`);
             const data = await response.json();
             
             if (response.ok) {
@@ -96,11 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('게시글 목록 요청 오류:', error);
-            
-            // 테스트 목적으로 로컬 개발 환경에서는 샘플 데이터 사용
-            console.log('테스트용 샘플 게시글 데이터 로드');
-            const samplePosts = generateSamplePosts(10);
-            renderPosts(samplePosts);
         } finally {
             hideLoading();
             isLoading = false;

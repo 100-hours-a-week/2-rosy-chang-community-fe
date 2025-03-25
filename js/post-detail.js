@@ -147,14 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         try {
-            // 게시글 조회 API 호출
-            const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-            
+            const response = await fetchAPI(`/posts/${postId}`);
             const data = await response.json();
             
             if (response.ok) {
@@ -166,25 +159,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('게시글 조회 오류:', error);
-            
-            // 테스트 목적으로 샘플 데이터 사용
-            const samplePost = {
-                postId: postId,
-                title: '제목 1',
-                content: document.getElementById('postBody').textContent,
-                author: {
-                    userId: 1,
-                    nickname: '디미 작성자 1',
-                    profileImageUrl: ''
-                },
-                createdAt: '2021-01-01 00:00:00',
-                likes: 123,
-                views: 123,
-                comments: 123,
-                likedByMe: false
-            };
-            
-            displayPostDetail(samplePost);
         }
     }
     
@@ -247,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     content: '댓글 내용 1',
                     author: {
                         userId: 1,
-                        nickname: '디미 작성자 1',
+                        nickname: '더미 작성자 1',
                         profileImageUrl: ''
                     },
                     createdAt: '2021-01-01 00:00:00'
@@ -257,7 +231,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     content: '댓글 내용 2',
                     author: {
                         userId: 2,
-                        nickname: '디미 작성자 2',
+                        nickname: '더미 작성자 2',
                         profileImageUrl: ''
                     },
                     createdAt: '2021-01-01 00:00:00'
@@ -267,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     content: '댓글 내용 3',
                     author: {
                         userId: parseInt(currentUserId),
-                        nickname: '내 댓글',
+                        nickname: '더미 작성자 3',
                         profileImageUrl: ''
                     },
                     createdAt: '2021-01-01 00:00:00'
@@ -338,13 +312,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // 댓글 작성 함수
     async function submitComment(content) {
         try {
-            // 댓글 작성 API 호출
-            const response = await fetch(`${API_BASE_URL}/posts/${postId}/comments`, {
+            const response = await fetchAPI(`/posts/${postId}/comments`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
                 body: JSON.stringify({
                     content: content
                 })
@@ -359,40 +328,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // 댓글 목록 다시 로드
                 loadComments();
-                
-                // 댓글 수 업데이트
-                const currentCount = parseInt(viewsCount.textContent);
-                viewsCount.textContent = formatCount(currentCount + 1);
             } else {
                 console.error('댓글 작성 실패:', data.message);
                 alert('댓글 작성에 실패했습니다.');
             }
         } catch (error) {
             console.error('댓글 작성 오류:', error);
-            
-            // 테스트 목적으로 댓글 작성 성공 처리
-            console.log('테스트용 댓글 작성 처리');
-            commentInput.value = '';
-            commentSubmitBtn.classList.remove('active');
-            
-            // 현재 시간으로 새 댓글 추가
-            const newComment = {
-                commentId: new Date().getTime(),
-                content: content,
-                author: {
-                    userId: parseInt(currentUserId),
-                    nickname: localStorage.getItem('nickname') || '테스트 사용자',
-                    profileImageUrl: ''
-                },
-                createdAt: new Date().toISOString()
-            };
-            
-            const commentElement = createCommentElement(newComment);
-            commentsList.prepend(commentElement);
-            
-            // 댓글 수 업데이트
-            const currentCount = parseInt(viewsCount.textContent);
-            viewsCount.textContent = formatCount(currentCount + 1);
         }
     }
     
