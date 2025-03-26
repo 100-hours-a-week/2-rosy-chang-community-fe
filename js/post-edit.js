@@ -160,34 +160,29 @@ document.addEventListener('DOMContentLoaded', function() {
                 formData.append('images', currentImage);
             }
             
-            // 게시글 수정 API 호출
-            const response = await fetchAPI(`/posts/${postId}`, {
+            // 게시글 수정 API 호출 (직접 fetch 사용)
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/posts/${postId}`, {
                 method: 'PUT',
                 headers: {
-                    // FormData를 사용하므로 Content-Type 헤더를 명시하지 않음
+                    'Authorization': `Bearer ${token}`
+                    // 중요: Content-Type 헤더를 설정하지 않음!
                 },
                 body: formData
             });
             
-            if (!response.ok) {
-                throw new Error('게시글 수정 실패');
-            }
-            
             const data = await response.json();
             
-            if (data.status === 200) {
+            if (response.ok || data.status === 200) {
                 // 게시글 수정 성공 시 상세 페이지로 이동
                 alert('게시글이 수정되었습니다.');
                 window.location.href = `post-detail.html?id=${postId}`;
             } else {
-                handlePostUpdateError(data);
+                alert(data.message || '게시글 수정에 실패했습니다.');
             }
         } catch (error) {
             console.error('게시글 수정 요청 오류:', error);
-            
-            // 테스트 목적으로 게시글 수정 성공 처리
-            alert('게시글이 수정되었습니다.');
-            window.location.href = `post-detail.html?id=${postId}`;
+            alert('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
         }
     }
     
