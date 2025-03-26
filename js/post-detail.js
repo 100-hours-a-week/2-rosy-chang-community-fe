@@ -181,22 +181,29 @@ document.addEventListener('DOMContentLoaded', function() {
         postTitle.textContent = post.title || '';
         postBody.textContent = post.content || '';
         
-        // 작성자 정보 설정
-        if (post.author) {
-            authorName.textContent = post.author.nickname || '익명';
-            
-            if (post.author.profileImageUrl) {
-                authorImage.src = post.author.profileImageUrl;
-            }
+        // 작성자 정보 설정 - API 응답 구조에 맞게 수정
+        authorName.textContent = post.authorNickname || '익명';
+        
+        if (post.authorProfileImageUrl) {
+            authorImage.src = post.authorProfileImageUrl;
         }
         
         // 작성일 설정
         postDate.textContent = formatDateTime(post.createdAt);
         
         // 좋아요, 조회수, 댓글 수 설정
-        likesCount.textContent = formatCount(post.likes || 0);
-        viewsCount.textContent = formatCount(post.views || 0);
-        commentsCount.textContent = formatCount(post.comments || 0);
+        likesCount.textContent = formatCount(post.likeCount || 0);
+        viewsCount.textContent = formatCount(post.viewCount || 0);
+        
+        // 댓글 수는 별도로 로드할 때 설정하거나 백엔드 응답에서 가져옴
+        // 수정: commentsCount.textContent = formatCount(post.comments || 0);
+        
+        // 이부분을 추가하여 댓글 수 업데이트
+        loadComments().then(comments => {
+            if (comments) {
+                commentsCount.textContent = formatCount(comments.length || 0);
+            }
+        });
         
         // 좋아요 상태 설정
         if (post.likedByMe) {
@@ -205,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 작성자인 경우에만 수정/삭제 버튼 표시
-        if (post.author && post.author.userId != currentUserId) {
+        if (post.authorId != currentUserId) {
             editDeleteBtn.style.display = 'none';
         }
     }
@@ -267,13 +274,17 @@ document.addEventListener('DOMContentLoaded', function() {
         // 댓글 ID 설정
         commentItem.dataset.commentId = comment.commentId;
         
-        // 작성자 정보 설정
+        // 작성자 정보 설정 - 수정 필요
         const authorNameElement = commentItem.querySelector('.author-name');
-        authorNameElement.textContent = comment.author ? comment.author.nickname : '익명';
+        // 수정 전: authorNameElement.textContent = comment.author ? comment.author.nickname : '익명';
+        // 수정 후:
+        authorNameElement.textContent = comment.authorNickname || '익명';
         
         const authorImageElement = commentItem.querySelector('.author-image img');
-        if (comment.author && comment.author.profileImageUrl) {
-            authorImageElement.src = comment.author.profileImageUrl;
+        // 수정 전: if (comment.author && comment.author.profileImageUrl) {
+        // 수정 후:
+        if (comment.authorProfileImageUrl) {
+            authorImageElement.src = comment.authorProfileImageUrl;
         }
         
         // 날짜 설정
@@ -286,7 +297,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const editButton = commentItem.querySelector('.comment-edit-button');
         const deleteButton = commentItem.querySelector('.comment-delete-button');
         
-        const isAuthor = comment.author && comment.author.userId == currentUserId;
+        // 수정 전: const isAuthor = comment.author && comment.author.userId == currentUserId;
+        // 수정 후:
+        const isAuthor = comment.authorId == currentUserId;
         
         if (!isAuthor) {
             editButton.style.display = 'none';
@@ -311,18 +324,17 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function checkLikeStatus() {
         try {
-            const response = await fetchAPI(`/posts/${postId}/like/check`);
+            const userId = localStorage.getItem('userId');
+            const response = await fetchAPI(`/api/likes/check?postId=${postId}&userId=${userId}`);
             
             if (response.ok) {
                 const data = await response.json();
-                
-                if (data.data && data.data.liked) {
+                if (data.liked) {
                     document.querySelector('.stats-item.likes').classList.add('active');
                     isLiked = true;
-                    return true;
                 }
+                return data.liked;
             }
-            
             return false;
         } catch (error) {
             console.error('좋아요 상태 확인 오류:', error);
@@ -338,27 +350,35 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // 좋아요 또는 좋아요 취소 API 호출
-            const method = isLiked ? 'DELETE' : 'POST';
+            // 수정 전: const method = isLiked ? 'DELETE' : 'POST';
+            // 수정 후: POST 메서드만 사용 (백엔드가 토글 기능을 구현)
             const response = await fetchAPI(`/posts/${postId}/like`, {
-                method: method
+                method: 'POST'
             });
             
             if (response.ok) {
-                // 좋아요 상태 토글
-                isLiked = !isLiked;
+                const data = await response.json();
                 
-                // UI 업데이트
-                updateLikeUI();
+                // 백엔드 응답을 기반으로 좋아요 상태 업데이트
+                // 수정: isLiked = !isLiked;
+                isLiked = data.data.liked;
+                
+                // UI 업데이트 - 실제 데이터로 업데이트
+                const likeElement = document.querySelector('.stats-item.likes');
+                if (isLiked) {
+                    likeElement.classList.add('active');
+                } else {
+                    likeElement.classList.remove('active');
+                }
+                likesCount.textContent = formatCount(data.data.likeCount);
+                
             } else {
                 console.error('좋아요 토글 실패');
                 showErrorToast('좋아요 처리에 실패했습니다.');
             }
         } catch (error) {
             console.error('좋아요 토글 오류:', error);
-            
-            // 테스트 목적으로 토글 처리
-            isLiked = !isLiked;
-            updateLikeUI();
+            showErrorToast('서버 연결에 실패했습니다.');
         }
     }
     
