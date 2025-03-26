@@ -145,23 +145,39 @@ document.addEventListener('DOMContentLoaded', function() {
         const titleElement = postCard.querySelector('.post-title');
         titleElement.textContent = truncateText(post.title, 26);
         
-        // 좋아요, 댓글, 조회수 설정
-        postCard.querySelector('.likes-count .count').textContent = formatCount(post.likes || 0);
-        postCard.querySelector('.comments-count .count').textContent = formatCount(post.comments || 0);
-        postCard.querySelector('.views-count .count').textContent = formatCount(post.views || 0);
+        // 좋아요, 댓글, 조회수 설정 (수정 필요)
+        // 수정 전:
+        // postCard.querySelector('.likes-count .count').textContent = formatCount(post.likes || 0);
+        // postCard.querySelector('.comments-count .count').textContent = formatCount(post.comments || 0);
+        // postCard.querySelector('.views-count .count').textContent = formatCount(post.views || 0);
+        
+        // 수정 후:
+        postCard.querySelector('.likes-count .count').textContent = formatCount(post.likeCount || 0);
+        // 댓글 수 필드명 확인 필요. API 응답에 따라 조정
+        // 가능한 필드명: commentCount 또는 comments
+        postCard.querySelector('.comments-count .count').textContent = formatCount(post.commentCount || 0);
+        postCard.querySelector('.views-count .count').textContent = formatCount(post.viewCount || 0);
         
         // 날짜 설정
         postCard.querySelector('.post-date').textContent = formatDateTime(post.createdAt);
         
-        // 작성자 정보 설정
-        if (post.author) {
-            const authorImage = postCard.querySelector('.author-image img');
-            if (post.author.profileImageUrl) {
-                authorImage.src = post.author.profileImageUrl;
-            }
-            
-            postCard.querySelector('.author-name').textContent = post.author.nickname || '익명';
+        // 작성자 정보 설정 (수정 필요)
+        // 수정 전:
+        // if (post.author) {
+        //     const authorImage = postCard.querySelector('.author-image img');
+        //     if (post.author.profileImageUrl) {
+        //         authorImage.src = post.author.profileImageUrl;
+        //     }
+        //     
+        //     postCard.querySelector('.author-name').textContent = post.author.nickname || '익명';
+        // }
+        
+        // 수정 후:
+        const authorImage = postCard.querySelector('.author-image img');
+        if (post.authorProfileImageUrl) {
+            authorImage.src = post.authorProfileImageUrl;
         }
+        postCard.querySelector('.author-name').textContent = post.authorNickname || '익명';
         
         // 게시글 카드 클릭 이벤트 - 상세 페이지로 이동
         postCard.addEventListener('click', function() {
