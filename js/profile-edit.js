@@ -64,11 +64,24 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function loadUserInfo() {
         try {
-            // 사용자 정보 조회 API 호출
-            const result = await loadUserProfile();
+            // 토큰 가져오기
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+    
+            // 사용자 정보 조회 API 직접 호출
+            const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             
-            if (result.success) {
-                displayUserInfo(result.data);
+            if (response.ok) {
+                const data = await response.json();
+                displayUserInfo(data.data);
             } else {
                 alert('사용자 정보를 불러올 수 없습니다.');
                 window.location.href = 'login.html';
@@ -148,6 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 회원정보 수정 요청 처리 함수
      */
+    // profile-edit.js 파일에서 handleProfileUpdate 함수 수정
     async function handleProfileUpdate(e) {
         e.preventDefault();
         
@@ -155,32 +169,51 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!validateNickname()) {
             return;
         }
-        
+    
         try {
             // 프로필 이미지와 닉네임 정보 가져오기
             const nickname = nicknameInput.value.trim();
             const profileImageFile = profileImage.files[0]; // 새로 선택한 파일이 있으면 사용
-            
-            // 회원정보 수정 API 호출
-            const result = await updateUserProfile(nickname, profileImageFile);
-            
-            if (result.success) {
+        
+            // FormData 객체 사용
+            const formData = new FormData();
+            if (nickname) {
+                formData.append('nickname', nickname);
+            }
+            if (profileImageFile) {
+                formData.append('profileImage', profileImageFile);
+            }
+        
+            // API 직접 호출 (multipart/form-data 문제 해결)
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/users/profile`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Content-Type 헤더를 지정하지 않음
+                },
+                body: formData
+            });
+        
+            const data = await response.json();
+        
+            if (response.ok) {
                 // 수정 성공 시 토스트 메시지 표시
                 showToastMessage();
-                
+            
                 // 로컬 스토리지 정보 업데이트
-                if (result.data) {
-                    if (result.data.nickname) {
-                        localStorage.setItem('nickname', result.data.nickname);
+                if (data.data) {
+                    if (data.data.nickname) {
+                        localStorage.setItem('nickname', data.data.nickname);
                     }
-                    
-                    if (result.data.profileImageUrl) {
-                        localStorage.setItem('profileImageUrl', result.data.profileImageUrl);
+                
+                    if (data.data.profileImageUrl) {
+                        localStorage.setItem('profileImageUrl', data.data.profileImageUrl);
                     }
                 }
             } else {
                 // 수정 실패 시 오류 처리
-                handleProfileUpdateError(result);
+                alert(data.message || '회원정보 수정에 실패했습니다.');
             }
         } catch (error) {
             console.error('회원정보 수정 요청 오류:', error);
