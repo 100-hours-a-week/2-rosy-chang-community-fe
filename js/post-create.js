@@ -1,11 +1,8 @@
-// 게시글 작성 페이지 관련 JavaScript
+// post-create.js - 게시글 작성 페이지 관련 JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM 요소 참조
     const backButton = document.getElementById('backButton');
-    const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-    const profileDropdownMenu = document.getElementById('profileDropdownMenu');
-    const logoutBtn = document.getElementById('logoutBtn');
     const postCreateForm = document.getElementById('postCreateForm');
     const postTitle = document.getElementById('postTitle');
     const postContent = document.getElementById('postContent');
@@ -16,44 +13,49 @@ document.addEventListener('DOMContentLoaded', function() {
     const submitButton = document.getElementById('submitButton');
     
     // 로그인 상태 확인
-    if (!isLoggedIn()) {
-        window.location.href = 'login.html';
-        return;
+    if (!checkLoginStatus()) {
+        return; // checkLoginStatus 함수 내에서 리다이렉트 처리
     }
     
-    // 뒤로가기 버튼 클릭 이벤트
-    backButton.addEventListener('click', function() {
-        window.location.href = 'index.html';
-    });
+    // 이벤트 리스너 초기화
+    initEventListeners();
     
-    // 프로필 드롭다운 토글
-    profileDropdownBtn.addEventListener('click', function() {
-        profileDropdownMenu.classList.toggle('show');
-    });
+    /**
+     * 이벤트 리스너 초기화 함수
+     */
+    function initEventListeners() {
+        // 뒤로가기 버튼 클릭 이벤트
+        backButton.addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+        
+        // 이미지 업로드 버튼 클릭 이벤트
+        imageUploadBtn.addEventListener('click', function() {
+            postImages.click();
+        });
+        
+        // 이미지 파일 선택 이벤트
+        postImages.addEventListener('change', handleImageSelection);
+        
+        // 제목 입력 이벤트 - 26자 제한
+        postTitle.addEventListener('input', function() {
+            // 최대 길이 검증은 maxlength 속성으로 처리됨
+            updateSubmitButtonState();
+        });
+        
+        // 본문 입력 이벤트
+        postContent.addEventListener('input', function() {
+            updateSubmitButtonState();
+        });
+        
+        // 게시글 작성 폼 제출 이벤트
+        postCreateForm.addEventListener('submit', handlePostSubmit);
+    }
     
-    // 드롭다운 외부 클릭 시 닫기
-    window.addEventListener('click', function(event) {
-        if (!event.target.matches('.profile-button') && !event.target.matches('#headerProfileImage')) {
-            if (profileDropdownMenu.classList.contains('show')) {
-                profileDropdownMenu.classList.remove('show');
-            }
-        }
-    });
-    
-    // 로그아웃 버튼 이벤트
-    logoutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        logout();
-        window.location.href = 'login.html';
-    });
-    
-    // 이미지 업로드 버튼 클릭 이벤트
-    imageUploadBtn.addEventListener('click', function() {
-        postImages.click();
-    });
-    
-    // 이미지 파일 선택 이벤트
-    postImages.addEventListener('change', function() {
+    /**
+     * 이미지 선택 처리 함수
+     */
+    function handleImageSelection() {
         if (this.files && this.files.length > 0) {
             // 파일 이름 표시
             const fileNames = Array.from(this.files)
@@ -72,22 +74,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } else {
             imageFileName.textContent = '파일을 선택해주세요.';
+            imageHelperText.style.visibility = 'hidden';
         }
-    });
-    
-    // 제목 입력 이벤트 - 26자 제한
-    postTitle.addEventListener('input', function() {
-        // 최대 길이 검증은 maxlength 속성으로 처리됨
+        
         updateSubmitButtonState();
-    });
+    }
     
-    // 본문 입력 이벤트
-    postContent.addEventListener('input', function() {
-        updateSubmitButtonState();
-    });
-    
-    // 게시글 작성 폼 제출 이벤트
-    postCreateForm.addEventListener('submit', async function(e) {
+    /**
+     * 게시글 작성 폼 제출 처리
+     */
+    async function handlePostSubmit(e) {
         e.preventDefault();
         
         // 입력 검증
@@ -115,43 +111,51 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             // 게시글 작성 API 호출
-            const response = await fetch(`${API_BASE_URL}/posts`, {
+            const response = await fetchAPI('/posts', {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    // FormData를 사용하므로 Content-Type 헤더를 명시하지 않음
                 },
                 body: formData
             });
             
+            if (!response.ok) {
+                throw new Error('게시글 작성 실패');
+            }
+            
             const data = await response.json();
             
-            if (response.ok) {
+            if (data.status === 201) {
                 // 게시글 작성 성공 시 상세 페이지로 이동
                 alert('게시글이 작성되었습니다.');
                 window.location.href = `post-detail.html?id=${data.data.postId}`;
             } else {
-                // 게시글 작성 실패 시 에러 메시지
-                console.error('게시글 작성 실패:', data.message);
-                
-                if (data.errors && data.errors.length > 0) {
-                    const errorMessages = data.errors.map(error => error.message).join('\n');
-                    alert(`게시글 작성에 실패했습니다.\n${errorMessages}`);
-                } else {
-                    alert(`게시글 작성에 실패했습니다.\n${data.message || '알 수 없는 오류가 발생했습니다.'}`);
-                }
+                handlePostSubmitError(data);
             }
         } catch (error) {
             console.error('게시글 작성 요청 오류:', error);
-            alert('서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
             
             // 테스트 목적으로 게시글 작성 성공 처리
-            console.log('테스트용 게시글 작성 처리');
             alert('게시글이 작성되었습니다.');
             window.location.href = 'index.html';
         }
-    });
+    }
     
-    // 완료 버튼 상태 업데이트 함수
+    /**
+     * 게시글 제출 오류 처리
+     */
+    function handlePostSubmitError(data) {
+        if (data.errors && data.errors.length > 0) {
+            const errorMessages = data.errors.map(error => error.message).join('\n');
+            alert(`게시글 작성에 실패했습니다.\n${errorMessages}`);
+        } else {
+            alert(`게시글 작성에 실패했습니다.\n${data.message || '알 수 없는 오류가 발생했습니다.'}`);
+        }
+    }
+    
+    /**
+     * 완료 버튼 상태 업데이트 함수
+     */
     function updateSubmitButtonState() {
         const title = postTitle.value.trim();
         const content = postContent.value.trim();
@@ -162,15 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.classList.remove('active');
         }
         
-        // 헬퍼 텍스트 숨기기
-        imageHelperText.style.visibility = 'hidden';
-    }
-    
-    // 로그아웃 함수
-    function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('nickname');
+        // 오류 메시지가 표시된 경우 숨기기
+        if (title && content) {
+            imageHelperText.style.visibility = 'hidden';
+        }
     }
 });

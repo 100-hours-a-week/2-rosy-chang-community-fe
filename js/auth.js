@@ -1,4 +1,8 @@
-// 인증 관련 기능 모듈
+// auth.js - 인증 관련 기능 모듈
+
+/**
+ * 로그인 관련 함수
+ */
 
 // 로그인 API 호출 함수
 async function loginUser(email, password) {
@@ -53,6 +57,10 @@ async function loginUser(email, password) {
     }
 }
 
+/**
+ * 회원가입 관련 함수
+ */
+
 // 회원가입 API 호출 함수
 async function signupUser(userData) {
     try {
@@ -105,6 +113,10 @@ async function signupUser(userData) {
     }
 }
 
+/**
+ * 사용자 정보 관리 관련 함수
+ */
+
 // 로그아웃 API 호출 함수
 async function logoutUser() {
     try {
@@ -134,20 +146,6 @@ async function logoutUser() {
         
         return false;
     }
-}
-
-// 현재 로그인 상태 확인 함수
-function isLoggedIn() {
-    return !!localStorage.getItem('token');
-}
-
-// 현재 사용자 정보 가져오기
-function getCurrentUser() {
-    return {
-        userId: localStorage.getItem('userId'),
-        nickname: localStorage.getItem('nickname'),
-        profileImageUrl: localStorage.getItem('profileImageUrl')
-    };
 }
 
 // 사용자 프로필 정보 로드 함수
@@ -194,7 +192,7 @@ async function withdrawUser() {
         
         if (response.ok) {
             // 회원 탈퇴 성공 시 로그아웃 처리
-            logout();
+            await logoutUser();
             return { success: true };
         } else {
             const errorData = await response.json();
@@ -213,11 +211,12 @@ async function withdrawUser() {
 }
 
 // 비밀번호 변경 함수
-async function changePassword(newPassword, passwordCheck) {
+async function changePassword(currentPassword, newPassword, passwordCheck) {
     try {
         const response = await fetchAPI('/users/password', {
             method: 'PUT',
             body: JSON.stringify({
+                currentPassword,
                 newPassword,
                 passwordCheck
             })
@@ -250,8 +249,19 @@ async function changePassword(newPassword, passwordCheck) {
 }
 
 // 회원정보 수정 함수
-async function updateUserProfile(formData) {
+async function updateUserProfile(nickname, profileImage) {
     try {
+        // FormData 객체 생성
+        const formData = new FormData();
+        
+        if (nickname) {
+            formData.append('nickname', nickname);
+        }
+        
+        if (profileImage) {
+            formData.append('profileImage', profileImage);
+        }
+        
         const response = await fetchAPI('/users/profile', {
             method: 'PUT',
             headers: {
@@ -264,7 +274,9 @@ async function updateUserProfile(formData) {
             const data = await response.json();
             
             // 업데이트된 정보 로컬 스토리지에 저장
-            localStorage.setItem('nickname', data.data.nickname);
+            if (data.data.nickname) {
+                localStorage.setItem('nickname', data.data.nickname);
+            }
             
             if (data.data.profileImageUrl) {
                 localStorage.setItem('profileImageUrl', data.data.profileImageUrl);

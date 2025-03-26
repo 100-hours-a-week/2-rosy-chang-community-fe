@@ -1,10 +1,7 @@
-// 비밀번호 수정 페이지 관련 JavaScript
+// password-edit.js - 비밀번호 수정 페이지 관련 JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM 요소 참조
-    const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-    const profileDropdownMenu = document.getElementById('profileDropdownMenu');
-    const logoutBtn = document.getElementById('logoutBtn');
     const passwordEditForm = document.getElementById('passwordEditForm');
     const passwordInput = document.getElementById('password');
     const passwordCheckInput = document.getElementById('passwordCheck');
@@ -14,114 +11,46 @@ document.addEventListener('DOMContentLoaded', function() {
     const toastMessage = document.getElementById('toastMessage');
     
     // 로그인 상태 확인
-    if (!isLoggedIn()) {
-        window.location.href = 'login.html';
-        return;
+    if (!checkLoginStatus()) {
+        return; // checkLoginStatus 함수 내에서 리다이렉트 처리
     }
     
     // 초기 오류 메시지 숨김
     hideErrorMessage(passwordHelperText);
     hideErrorMessage(passwordCheckHelperText);
     
-    // 프로필 드롭다운 토글
-    profileDropdownBtn.addEventListener('click', function() {
-        profileDropdownMenu.classList.toggle('show');
-    });
+    // 이벤트 리스너 초기화
+    initEventListeners();
     
-    // 드롭다운 외부 클릭 시 닫기
-    window.addEventListener('click', function(event) {
-        if (!event.target.matches('.profile-button') && !event.target.matches('#headerProfileImage')) {
-            if (profileDropdownMenu.classList.contains('show')) {
-                profileDropdownMenu.classList.remove('show');
-            }
-        }
-    });
-    
-    // 로그아웃 버튼 이벤트
-    logoutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        logout();
-        window.location.href = 'login.html';
-    });
-    
-    // 비밀번호 입력 이벤트
-    passwordInput.addEventListener('input', function() {
-        validatePassword();
-        updateSubmitButtonState();
-    });
-    
-    // 비밀번호 확인 입력 이벤트
-    passwordCheckInput.addEventListener('input', function() {
-        validatePasswordCheck();
-        updateSubmitButtonState();
-    });
-    
-    // 비밀번호 포커스 아웃 이벤트
-    passwordInput.addEventListener('focusout', function() {
-        validatePassword();
-    });
-    
-    // 비밀번호 확인 포커스 아웃 이벤트
-    passwordCheckInput.addEventListener('focusout', function() {
-        validatePasswordCheck();
-    });
-    
-    // 비밀번호 수정 폼 제출 이벤트
-    passwordEditForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    /**
+     * 이벤트 리스너 초기화 함수
+     */
+    function initEventListeners() {
+        // 비밀번호 입력 이벤트
+        passwordInput.addEventListener('input', function() {
+            validatePassword();
+            updateSubmitButtonState();
+        });
         
-        if (!validatePassword() || !validatePasswordCheck()) {
-            return;
-        }
+        // 비밀번호 확인 입력 이벤트
+        passwordCheckInput.addEventListener('input', function() {
+            validatePasswordCheck();
+            updateSubmitButtonState();
+        });
         
-        try {
-            // 비밀번호 수정 API 호출
-            const response = await fetch(`${API_BASE_URL}/users/password`, {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    newPassword: passwordInput.value,
-                    passwordCheck: passwordCheckInput.value
-                })
-            });
-            
-            const data = await response.json();
-            
-            if (response.ok) {
-                // 비밀번호 수정 성공
-                resetForm();
-                showToastMessage();
-            } else {
-                // 비밀번호 수정 실패
-                console.error('비밀번호 수정 실패:', data.message);
-                
-                if (data.errors && data.errors.length > 0) {
-                    data.errors.forEach(error => {
-                        if (error.field === 'newPassword') {
-                            showErrorMessage(passwordHelperText, error.message);
-                        } else if (error.field === 'passwordCheck') {
-                            showErrorMessage(passwordCheckHelperText, error.message);
-                        }
-                    });
-                } else {
-                    alert(data.message || '비밀번호 수정에 실패했습니다.');
-                }
-            }
-        } catch (error) {
-            console.error('비밀번호 수정 요청 오류:', error);
-            alert('서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
-            
-            // 테스트 목적으로 성공 처리
-            console.log('테스트용 비밀번호 수정 처리');
-            resetForm();
-            showToastMessage();
-        }
-    });
+        // 비밀번호 포커스 아웃 이벤트
+        passwordInput.addEventListener('focusout', validatePassword);
+        
+        // 비밀번호 확인 포커스 아웃 이벤트
+        passwordCheckInput.addEventListener('focusout', validatePasswordCheck);
+        
+        // 비밀번호 수정 폼 제출 이벤트
+        passwordEditForm.addEventListener('submit', handlePasswordUpdate);
+    }
     
-    // 비밀번호 유효성 검사 함수
+    /**
+     * 비밀번호 유효성 검사 함수
+     */
     function validatePassword() {
         const password = passwordInput.value;
         
@@ -139,7 +68,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // 비밀번호 확인 유효성 검사 함수
+    /**
+     * 비밀번호 확인 유효성 검사 함수
+     */
     function validatePasswordCheck() {
         const password = passwordInput.value;
         const passwordCheck = passwordCheckInput.value;
@@ -158,7 +89,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return true;
     }
     
-    // 비밀번호 형식 검사 함수
+    /**
+     * 비밀번호 형식 검사 함수
+     */
     function isValidPassword(password) {
         // 8-20자, 대문자, 소문자, 숫자, 특수문자 각 1개 이상 포함
         if (password.length < 8 || password.length > 20) return false;
@@ -171,27 +104,9 @@ document.addEventListener('DOMContentLoaded', function() {
         return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
     }
     
-    // 에러 메시지 표시 함수
-    function showErrorMessage(element, message) {
-        element.textContent = message;
-        element.style.visibility = 'visible';
-    }
-    
-    // 에러 메시지 숨김 함수
-    function hideErrorMessage(element) {
-        element.style.visibility = 'hidden';
-    }
-    
-    // 폼 초기화 함수
-    function resetForm() {
-        passwordInput.value = '';
-        passwordCheckInput.value = '';
-        hideErrorMessage(passwordHelperText);
-        hideErrorMessage(passwordCheckHelperText);
-        submitButton.classList.remove('active');
-    }
-    
-    // 수정하기 버튼 상태 업데이트 함수
+    /**
+     * 수정하기 버튼 상태 업데이트 함수
+     */
     function updateSubmitButtonState() {
         if (passwordInput.value && passwordCheckInput.value && 
             passwordInput.value === passwordCheckInput.value && 
@@ -202,7 +117,73 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // 토스트 메시지 표시 함수
+    /**
+     * 비밀번호 수정 요청 처리 함수
+     */
+    async function handlePasswordUpdate(e) {
+        e.preventDefault();
+        
+        if (!validatePassword() || !validatePasswordCheck()) {
+            return;
+        }
+        
+        try {
+            // 비밀번호 수정 API 호출
+            const result = await changePassword(
+                // 현재 구현에서는 currentPassword 파라미터가 필요하지만,
+                // 피그마 디자인에는 현재 비밀번호 필드가 없으므로 새 비밀번호만 보냄
+                passwordInput.value, // 임시로 현재 비밀번호 대신 사용
+                passwordInput.value,
+                passwordCheckInput.value
+            );
+            
+            if (result.success) {
+                // 비밀번호 수정 성공
+                resetForm();
+                showToastMessage();
+            } else {
+                // 비밀번호 수정 실패
+                handlePasswordUpdateError(result);
+            }
+        } catch (error) {
+            console.error('비밀번호 수정 요청 오류:', error);
+            alert('서버 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        }
+    }
+    
+    /**
+     * 비밀번호 수정 오류 처리 함수
+     */
+    function handlePasswordUpdateError(result) {
+        if (result.errors && result.errors.length > 0) {
+            result.errors.forEach(error => {
+                if (error.field === 'currentPassword') {
+                    showErrorMessage(passwordHelperText, error.message);
+                } else if (error.field === 'newPassword') {
+                    showErrorMessage(passwordHelperText, error.message);
+                } else if (error.field === 'passwordCheck') {
+                    showErrorMessage(passwordCheckHelperText, error.message);
+                }
+            });
+        } else {
+            alert(result.message || '비밀번호 수정에 실패했습니다.');
+        }
+    }
+    
+    /**
+     * 폼 초기화 함수
+     */
+    function resetForm() {
+        passwordInput.value = '';
+        passwordCheckInput.value = '';
+        hideErrorMessage(passwordHelperText);
+        hideErrorMessage(passwordCheckHelperText);
+        submitButton.classList.remove('active');
+    }
+    
+    /**
+     * 토스트 메시지 표시 함수
+     */
     function showToastMessage() {
         toastMessage.style.display = 'block';
         
@@ -210,13 +191,5 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(function() {
             toastMessage.style.display = 'none';
         }, 3000);
-    }
-    
-    // 로그아웃 함수
-    function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('nickname');
     }
 });

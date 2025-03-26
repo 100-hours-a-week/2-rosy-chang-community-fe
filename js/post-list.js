@@ -1,10 +1,7 @@
-// 게시글 목록 조회 페이지 관련 JavaScript
+// post-list.js - 게시글 목록 조회 페이지 관련 JavaScript
 
 document.addEventListener('DOMContentLoaded', function() {
     // DOM 요소 참조
-    const profileDropdownBtn = document.getElementById('profileDropdownBtn');
-    const profileDropdownMenu = document.getElementById('profileDropdownMenu');
-    const logoutBtn = document.getElementById('logoutBtn');
     const createPostBtn = document.getElementById('createPostBtn');
     const postList = document.getElementById('postList');
     const postCardTemplate = document.getElementById('postCardTemplate');
@@ -18,9 +15,8 @@ document.addEventListener('DOMContentLoaded', function() {
     let hasMorePosts = true;
     
     // 로그인 상태 확인
-    if (!isLoggedIn()) {
-        window.location.href = 'login.html';
-        return;
+    if (!checkLoginStatus()) {
+        return; // checkLoginStatus 함수 내에서 리다이렉트 처리
     }
     
     // 사용자 닉네임 표시
@@ -29,55 +25,64 @@ document.addEventListener('DOMContentLoaded', function() {
         userNickname.textContent = nickname;
     }
     
-    // 프로필 드롭다운 토글
-    profileDropdownBtn.addEventListener('click', function() {
-        profileDropdownMenu.classList.toggle('show');
-    });
-    
-    // 드롭다운 외부 클릭 시 닫기
-    window.addEventListener('click', function(event) {
-        if (!event.target.matches('.profile-button') && !event.target.matches('#headerProfileImage')) {
-            if (profileDropdownMenu.classList.contains('show')) {
-                profileDropdownMenu.classList.remove('show');
-            }
-        }
-    });
-    
-    // 로그아웃 버튼 이벤트
-    logoutBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        logout();
-        window.location.href = 'login.html';
-    });
-    
-    // 게시글 작성 버튼 이벤트
-    createPostBtn.addEventListener('click', function() {
-        window.location.href = 'post-create.html';
-    });
+    // 이벤트 리스너 초기화
+    initEventListeners();
     
     // 초기 게시글 로드
     loadPosts();
     
-    // 스크롤 이벤트 - 인피니티 스크롤 구현
-    window.addEventListener('scroll', function() {
+    /**
+     * 이벤트 리스너 초기화 함수
+     */
+    function initEventListeners() {
+        // 게시글 작성 버튼 이벤트
+        createPostBtn.addEventListener('click', function() {
+            window.location.href = 'post-create.html';
+        });
+        
+        // 게시글 작성 버튼 호버 이벤트
+        createPostBtn.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#7F6AEE';
+        });
+        
+        createPostBtn.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#ACA0EB';
+        });
+        
+        // 스크롤 이벤트 - 인피니티 스크롤 구현
+        window.addEventListener('scroll', handleScroll);
+    }
+    
+    /**
+     * 스크롤 이벤트 핸들러 - 인피니티 스크롤 구현
+     */
+    function handleScroll() {
         if (isLoading || !hasMorePosts) return;
         
         // 스크롤이 페이지 하단에 도달했는지 확인
         if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
             loadMorePosts();
         }
-    });
+    }
     
-    // 게시글 로드 함수
+    /**
+     * 게시글 로드 함수
+     */
     async function loadPosts() {
         isLoading = true;
         showLoading();
         
         try {
+            // 게시글 목록 API 호출
             const response = await fetchAPI(`/posts?page=${currentPage}&size=${pageSize}`);
+            
+            if (!response.ok) {
+                throw new Error('게시글 로드 실패');
+            }
+            
             const data = await response.json();
             
-            if (response.ok) {
+            if (data.status === 200) {
                 renderPosts(data.data.content);
                 
                 // 더 불러올 게시글이 있는지 확인
@@ -86,22 +91,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             } else {
                 console.error('게시글 목록 로드 실패:', data.message);
+                showErrorToast(data.message || '게시글을 불러오는데 실패했습니다.');
             }
         } catch (error) {
             console.error('게시글 목록 요청 오류:', error);
+            showErrorToast('서버 연결에 실패했습니다. 인터넷 연결을 확인해주세요.');
+            
+            // 테스트 목적으로 샘플 데이터 사용
+            renderPosts(generateSamplePosts(pageSize));
         } finally {
             hideLoading();
             isLoading = false;
         }
     }
     
-    // 더 많은 게시글 로드 함수
+    /**
+     * 더 많은 게시글 로드 함수
+     */
     function loadMorePosts() {
         currentPage++;
         loadPosts();
     }
     
-    // 게시글 렌더링 함수
+    /**
+     * 게시글 렌더링 함수
+     */
     function renderPosts(posts) {
         if (!posts || posts.length === 0) {
             if (currentPage === 1) {
@@ -116,8 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
             postList.appendChild(postCard);
         });
     }
-    
-    // 게시글 카드 생성 함수
+
+    /**
+     * 게시글 카드 생성 함수
+     */
     function createPostCard(post) {
         const template = postCardTemplate.content.cloneNode(true);
         const postCard = template.querySelector('.post-card');
@@ -155,50 +171,23 @@ document.addEventListener('DOMContentLoaded', function() {
         return postCard;
     }
     
-    // 텍스트 자르기 함수
-    function truncateText(text, maxLength) {
-        if (!text) return '';
-        return text.length > maxLength ? text.substring(0, maxLength) : text;
-    }
-    
-    // 날짜 포맷 함수
-    function formatDateTime(dateTimeString) {
-        if (!dateTimeString) return '';
-        
-        const date = new Date(dateTimeString);
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        
-        return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    }
-    
-    // 숫자 포맷 함수 (1k, 10k, 100k 등)
-    function formatCount(count) {
-        if (count >= 100000) {
-            return Math.floor(count / 1000) + 'k';
-        } else if (count >= 10000) {
-            return Math.floor(count / 1000) + 'k';
-        } else if (count >= 1000) {
-            return Math.floor(count / 1000) + 'k';
-        }
-        return count.toString();
-    }
-    
-    // 로딩 표시 함수
+    /**
+     * 로딩 표시 함수
+     */
     function showLoading() {
         loadingIndicator.style.display = 'block';
     }
     
-    // 로딩 숨김 함수
+    /**
+     * 로딩 숨김 함수
+     */
     function hideLoading() {
         loadingIndicator.style.display = 'none';
     }
     
-    // 샘플 게시글 생성 함수 (테스트용)
+    /**
+     * 샘플 게시글 생성 함수 (테스트용)
+     */
     function generateSamplePosts(count) {
         const samplePosts = [];
         
@@ -214,20 +203,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 createdAt: '2021-01-01 00:00:00',
                 author: {
                     userId: 1,
-                    nickname: '디미 작성자 ' + postId,
+                    nickname: '더미 작성자 ' + postId,
                     profileImageUrl: ''
                 }
             });
         }
         
         return samplePosts;
-    }
-    
-    // 로그아웃 함수
-    function logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('nickname');
     }
 });

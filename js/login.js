@@ -1,7 +1,10 @@
 // login.js - 로그인 페이지 관련 기능
 
+/**
+ * 로그인 페이지 초기화 및 이벤트 설정
+ */
 document.addEventListener('DOMContentLoaded', function() {
-    // 이미 로그인되어 있는 경우 메인 페이지(게시글 목록)로 이동
+    // 이미 로그인되어 있는 경우 메인 페이지로 이동
     if (isLoggedIn()) {
         window.location.href = 'index.html';
         return;
@@ -15,15 +18,48 @@ document.addEventListener('DOMContentLoaded', function() {
     const signupButton = document.getElementById('signupButton');
     const passwordHelperText = document.getElementById('passwordHelperText');
     
-    // 입력값 유효성 상태
+    // 입력값 유효성 상태 객체
     const formValidity = {
         email: false,
         password: false
     };
     
-    // 이메일 입력 변경 시 유효성 검사
-    emailInput.addEventListener('input', function() {
-        const email = this.value.trim();
+    // 이벤트 리스너 초기화
+    initEventListeners();
+    
+    /**
+     * 이벤트 리스너 초기화 함수
+     */
+    function initEventListeners() {
+        // 이메일 입력 변경 이벤트
+        emailInput.addEventListener('input', validateEmailInput);
+        
+        // 비밀번호 입력 변경 이벤트
+        passwordInput.addEventListener('input', validatePasswordInput);
+        
+        // 입력 필드에 포커스되면 에러 메시지 숨기기
+        emailInput.addEventListener('focus', function() {
+            hideErrorMessage(passwordHelperText);
+        });
+        
+        passwordInput.addEventListener('focus', function() {
+            hideErrorMessage(passwordHelperText);
+        });
+        
+        // 로그인 폼 제출 이벤트
+        loginForm.addEventListener('submit', handleLogin);
+        
+        // 회원가입 버튼 클릭 이벤트
+        signupButton.addEventListener('click', function() {
+            window.location.href = 'signup.html';
+        });
+    }
+    
+    /**
+     * 이메일 입력 검증 함수
+     */
+    function validateEmailInput() {
+        const email = emailInput.value.trim();
         
         if (!email) {
             formValidity.email = false;
@@ -31,12 +67,14 @@ document.addEventListener('DOMContentLoaded', function() {
             formValidity.email = validateEmail(email);
         }
         
-        updateButtonState();
-    });
+        updateLoginButtonState();
+    }
     
-    // 비밀번호 입력 변경 시 유효성 검사
-    passwordInput.addEventListener('input', function() {
-        const password = this.value.trim();
+    /**
+     * 비밀번호 입력 검증 함수
+     */
+    function validatePasswordInput() {
+        const password = passwordInput.value.trim();
         
         if (!password) {
             formValidity.password = false;
@@ -45,20 +83,13 @@ document.addEventListener('DOMContentLoaded', function() {
             formValidity.password = password.length > 0;
         }
         
-        updateButtonState();
-    });
+        updateLoginButtonState();
+    }
     
-    // 입력 필드에 포커스되면 에러 메시지 숨기기
-    emailInput.addEventListener('focus', function() {
-        hideErrorMessage(passwordHelperText);
-    });
-    
-    passwordInput.addEventListener('focus', function() {
-        hideErrorMessage(passwordHelperText);
-    });
-    
-    // 로그인 폼 제출 이벤트
-    loginForm.addEventListener('submit', async function(e) {
+    /**
+     * 로그인 폼 제출 핸들러
+     */
+    async function handleLogin(e) {
         e.preventDefault();
         
         const email = emailInput.value.trim();
@@ -86,33 +117,14 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             // 로그인 API 호출
-            const response = await fetchAPI('/users/login', {
-                method: 'POST',
-                body: JSON.stringify({
-                    email: email,
-                    password: password
-                })
-            });
+            const result = await loginUser(email, password);
             
-            const data = await response.json();
-            
-            if (response.ok) {
-                // 로그인 성공
-                localStorage.setItem('token', data.data.token);
-                localStorage.setItem('refreshToken', data.data.refreshToken);
-                localStorage.setItem('userId', data.data.userId);
-                localStorage.setItem('nickname', data.data.nickname);
-                
-                // 프로필 이미지 URL이 있으면 저장
-                if (data.data.profileImageUrl) {
-                    localStorage.setItem('profileImageUrl', data.data.profileImageUrl);
-                }
-                
-                // 게시글 목록 페이지로 이동
+            if (result.success) {
+                // 로그인 성공 시 게시글 목록 페이지로 이동
                 window.location.href = 'index.html';
             } else {
                 // 로그인 실패
-                showErrorMessage(passwordHelperText, '* 아이디 또는 비밀번호를 확인해주세요.');
+                showErrorMessage(passwordHelperText, `* ${result.message}`);
                 passwordInput.value = '';
                 passwordInput.focus();
             }
@@ -120,15 +132,12 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('로그인 요청 오류:', error);
             showErrorMessage(passwordHelperText, '* 서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
         }
-    });
+    }
     
-    // 회원가입 버튼 클릭 이벤트
-    signupButton.addEventListener('click', function() {
-        window.location.href = 'signup.html';
-    });
-    
-    // 버튼 상태 업데이트 함수
-    function updateButtonState() {
+    /**
+     * 로그인 버튼 상태 업데이트 함수
+     */
+    function updateLoginButtonState() {
         if (formValidity.email && formValidity.password) {
             loginButton.classList.add('active');
         } else {

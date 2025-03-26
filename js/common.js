@@ -1,9 +1,15 @@
 // common.js - 공통 유틸리티 함수
 
-// API 기본 URL 설정
+/**
+ * 공통 설정 및 상수
+ */
 const API_BASE_URL = 'http://localhost:8080';
 
-// API 호출 함수
+/**
+ * API 통신 관련 함수
+ */
+
+// 기본 API 호출 함수
 async function fetchAPI(endpoint, options = {}) {
     try {
         // 기본 헤더 설정
@@ -12,7 +18,7 @@ async function fetchAPI(endpoint, options = {}) {
             ...options.headers
         };
         
-        // 인증 토큰이 있는 경우 헤더에 추가
+        // 인증 토큰 추가
         const token = localStorage.getItem('token');
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
@@ -24,9 +30,9 @@ async function fetchAPI(endpoint, options = {}) {
             headers
         });
         
-        // 응답 상태에 따른 처리
+        // 인증 실패(401) 처리
         if (response.status === 401) {
-            // 인증 실패 (만료된 토큰 등)
+            // 토큰 갱신 시도
             const refreshResult = await refreshToken();
             if (refreshResult) {
                 // 토큰 갱신 성공 시 원래 요청 재시도
@@ -43,7 +49,7 @@ async function fetchAPI(endpoint, options = {}) {
     } catch (error) {
         console.error('API 요청 오류:', error);
         
-        // 네트워크 오류 (서버 연결 실패 등)
+        // 네트워크 오류 처리
         if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
             showErrorToast('서버에 연결할 수 없습니다. 인터넷 연결을 확인해주세요.');
         }
@@ -80,10 +86,47 @@ async function refreshToken() {
     }
 }
 
+/**
+ * 인증 관련 함수
+ */
+
 // 로그인 상태 확인
 function isLoggedIn() {
     return !!localStorage.getItem('token');
 }
+
+// 로그아웃 함수
+function logout() {
+    try {
+        // 로그아웃 API 호출 (비동기로 처리)
+        fetch(`${API_BASE_URL}/users/logout`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        }).catch(error => console.error('로그아웃 API 호출 오류:', error));
+    } finally {
+        // 로컬 스토리지에서 사용자 데이터 삭제
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('nickname');
+        localStorage.removeItem('profileImageUrl');
+    }
+}
+
+// 현재 사용자 정보 가져오기
+function getCurrentUser() {
+    return {
+        userId: localStorage.getItem('userId'),
+        nickname: localStorage.getItem('nickname'),
+        profileImageUrl: localStorage.getItem('profileImageUrl')
+    };
+}
+
+/**
+ * 유효성 검사 관련 함수
+ */
 
 // 이메일 유효성 검사
 function validateEmail(email) {
@@ -93,18 +136,22 @@ function validateEmail(email) {
 
 // 비밀번호 유효성 검사
 function validatePassword(password) {
-    // 비밀번호 길이 체크 (8-20자)
+    // 8-20자, 대문자, 소문자, 숫자, 특수문자 각각 1개 이상 포함
     if (password.length < 8 || password.length > 20) {
         return false;
     }
     
-    // 대문자, 소문자, 숫자, 특수문자 각각 1개 이상 포함 확인
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumbers = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
     
     return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
+}
+
+// 이미지 파일 유효성 검사
+function isValidImageFile(file) {
+    return file && file.type.startsWith('image/');
 }
 
 // 폼 입력값 검증 후 버튼 활성화 함수
@@ -122,6 +169,10 @@ function validateFormAndToggleButton(formInputs, button, activeClass = 'active')
     return allValid;
 }
 
+/**
+ * UI 관련 함수
+ */
+
 // 에러 메시지 표시 함수
 function showErrorMessage(element, message) {
     element.textContent = message;
@@ -134,7 +185,7 @@ function hideErrorMessage(element) {
 }
 
 // 토스트 메시지 표시 함수
-function showToast(message, duration = 3000) {
+function showToast(message, duration = 3000, type = 'success') {
     // 기존 토스트가 있으면 제거
     const existingToast = document.querySelector('.custom-toast');
     if (existingToast) {
@@ -151,7 +202,7 @@ function showToast(message, duration = 3000) {
     toast.style.bottom = '20px';
     toast.style.left = '50%';
     toast.style.transform = 'translateX(-50%)';
-    toast.style.backgroundColor = '#B197FC';
+    toast.style.backgroundColor = type === 'success' ? '#B197FC' : '#FF4949';
     toast.style.color = 'white';
     toast.style.padding = '12px 20px';
     toast.style.borderRadius = '20px';
@@ -170,42 +221,12 @@ function showToast(message, duration = 3000) {
 
 // 성공 토스트 메시지 표시
 function showSuccessToast(message) {
-    showToast(message);
+    showToast(message, 3000, 'success');
 }
 
 // 에러 토스트 메시지 표시
 function showErrorToast(message) {
-    // 기존 토스트가 있으면 제거
-    const existingToast = document.querySelector('.custom-toast');
-    if (existingToast) {
-        document.body.removeChild(existingToast);
-    }
-    
-    // 새 토스트 생성
-    const toast = document.createElement('div');
-    toast.className = 'custom-toast';
-    toast.textContent = message;
-    
-    // 스타일 적용 (에러는 빨간색으로)
-    toast.style.position = 'fixed';
-    toast.style.bottom = '20px';
-    toast.style.left = '50%';
-    toast.style.transform = 'translateX(-50%)';
-    toast.style.backgroundColor = '#FF4949';
-    toast.style.color = 'white';
-    toast.style.padding = '12px 20px';
-    toast.style.borderRadius = '20px';
-    toast.style.zIndex = '1000';
-    
-    // 문서에 추가
-    document.body.appendChild(toast);
-    
-    // 설정 시간 후 제거
-    setTimeout(() => {
-        if (document.body.contains(toast)) {
-            document.body.removeChild(toast);
-        }
-    }, 3000);
+    showToast(message, 3000, 'error');
 }
 
 // 확인 모달 표시 함수
@@ -260,54 +281,7 @@ function showConfirmModal(title, message, confirmCallback, cancelCallback) {
     });
     
     // 스타일 적용
-    modalOverlay.style.position = 'fixed';
-    modalOverlay.style.top = '0';
-    modalOverlay.style.left = '0';
-    modalOverlay.style.width = '100%';
-    modalOverlay.style.height = '100%';
-    modalOverlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
-    modalOverlay.style.display = 'flex';
-    modalOverlay.style.justifyContent = 'center';
-    modalOverlay.style.alignItems = 'center';
-    modalOverlay.style.zIndex = '1000';
-    
-    modalContent.style.backgroundColor = 'white';
-    modalContent.style.borderRadius = '10px';
-    modalContent.style.width = '80%';
-    modalContent.style.maxWidth = '400px';
-    modalContent.style.padding = '30px';
-    modalContent.style.textAlign = 'center';
-    
-    modalTitle.style.fontSize = '18px';
-    modalTitle.style.fontWeight = 'bold';
-    modalTitle.style.marginTop = '0';
-    modalTitle.style.marginBottom = '10px';
-    
-    modalMessage.style.fontSize = '14px';
-    modalMessage.style.color = '#666';
-    modalMessage.style.marginBottom = '20px';
-    
-    modalButtons.style.display = 'flex';
-    modalButtons.style.justifyContent = 'space-between';
-    modalButtons.style.gap = '10px';
-    
-    cancelButton.style.flex = '1';
-    cancelButton.style.padding = '10px';
-    cancelButton.style.borderRadius = '4px';
-    cancelButton.style.fontSize = '16px';
-    cancelButton.style.cursor = 'pointer';
-    cancelButton.style.backgroundColor = '#333';
-    cancelButton.style.color = 'white';
-    cancelButton.style.border = 'none';
-    
-    confirmButton.style.flex = '1';
-    confirmButton.style.padding = '10px';
-    confirmButton.style.borderRadius = '4px';
-    confirmButton.style.fontSize = '16px';
-    confirmButton.style.cursor = 'pointer';
-    confirmButton.style.backgroundColor = '#B197FC';
-    confirmButton.style.color = 'white';
-    confirmButton.style.border = 'none';
+    applyModalStyles(modalOverlay, modalContent, modalTitle, modalMessage, modalButtons, cancelButton, confirmButton);
     
     // 요소 조립
     modalButtons.appendChild(cancelButton);
@@ -323,70 +297,61 @@ function showConfirmModal(title, message, confirmCallback, cancelCallback) {
     document.body.appendChild(modalOverlay);
 }
 
-// 날짜 포맷 함수
-function formatDateTime(dateTimeString) {
-    if (!dateTimeString) return '';
+// 모달 스타일 적용 함수
+function applyModalStyles(overlay, content, title, message, buttons, cancelBtn, confirmBtn) {
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    overlay.style.display = 'flex';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.zIndex = '1000';
     
-    const date = new Date(dateTimeString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
+    content.style.backgroundColor = 'white';
+    content.style.borderRadius = '10px';
+    content.style.width = '80%';
+    content.style.maxWidth = '400px';
+    content.style.padding = '30px';
+    content.style.textAlign = 'center';
     
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    title.style.fontSize = '18px';
+    title.style.fontWeight = 'bold';
+    title.style.marginTop = '0';
+    title.style.marginBottom = '10px';
+    
+    message.style.fontSize = '14px';
+    message.style.color = '#666';
+    message.style.marginBottom = '20px';
+    
+    buttons.style.display = 'flex';
+    buttons.style.justifyContent = 'space-between';
+    buttons.style.gap = '10px';
+    
+    cancelBtn.style.flex = '1';
+    cancelBtn.style.padding = '10px';
+    cancelBtn.style.borderRadius = '4px';
+    cancelBtn.style.fontSize = '16px';
+    cancelBtn.style.cursor = 'pointer';
+    cancelBtn.style.backgroundColor = '#333';
+    cancelBtn.style.color = 'white';
+    cancelBtn.style.border = 'none';
+    
+    confirmBtn.style.flex = '1';
+    confirmBtn.style.padding = '10px';
+    confirmBtn.style.borderRadius = '4px';
+    confirmBtn.style.fontSize = '16px';
+    confirmBtn.style.cursor = 'pointer';
+    confirmBtn.style.backgroundColor = '#B197FC';
+    confirmBtn.style.color = 'white';
+    confirmBtn.style.border = 'none';
 }
 
-// 숫자 포맷 함수 (1k, 10k, 100k 등)
-function formatCount(count) {
-    if (count >= 100000) {
-        return Math.floor(count / 1000) + 'k';
-    } else if (count >= 10000) {
-        return Math.floor(count / 1000) + 'k';
-    } else if (count >= 1000) {
-        return Math.floor(count / 1000) + 'k';
-    }
-    return count.toString();
-}
-
-// 로그아웃 함수
-function logout() {
-    try {
-        // 로그아웃 API 호출 (비동기로 처리하고 결과 기다리지 않음)
-        fetch(`${API_BASE_URL}/users/logout`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        }).catch(error => console.error('로그아웃 API 호출 오류:', error));
-    } finally {
-        // 로컬 스토리지에서 사용자 데이터 삭제
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('nickname');
-        localStorage.removeItem('profileImageUrl');
-    }
-}
-
-// 이미지 파일 유효성 검사
-function isValidImageFile(file) {
-    // 파일이 이미지인지 확인
-    return file && file.type.startsWith('image/');
-}
-
-// 텍스트 자르기 함수
-function truncateText(text, maxLength) {
-    if (!text) return '';
-    return text.length > maxLength ? text.substring(0, maxLength) : text;
-}
-
-// 쿼리 파라미터에서 값 가져오기
-function getQueryParam(name) {
-    const urlParams = new URLSearchParams(window.location.search);
-    return urlParams.get(name);
-}
+/**
+ * 공통 UI 요소 초기화 
+ */
 
 // 프로필 드롭다운 초기화
 function initProfileDropdown() {
@@ -446,4 +411,47 @@ function checkLoginStatus() {
     initProfileDropdown();
     
     return true;
+}
+
+/**
+ * 포맷팅 관련 함수
+ */
+
+// 날짜 포맷 함수
+function formatDateTime(dateTimeString) {
+    if (!dateTimeString) return '';
+    
+    const date = new Date(dateTimeString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+// 숫자 포맷 함수 (1k, 10k, 100k 등)
+function formatCount(count) {
+    if (count >= 100000) {
+        return Math.floor(count / 1000) + 'k';
+    } else if (count >= 10000) {
+        return Math.floor(count / 1000) + 'k';
+    } else if (count >= 1000) {
+        return Math.floor(count / 1000) + 'k';
+    }
+    return count.toString();
+}
+
+// 텍스트 자르기 함수
+function truncateText(text, maxLength) {
+    if (!text) return '';
+    return text.length > maxLength ? text.substring(0, maxLength) : text;
+}
+
+// 쿼리 파라미터에서 값 가져오기
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
 }
