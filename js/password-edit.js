@@ -120,30 +120,61 @@ document.addEventListener('DOMContentLoaded', function() {
     /**
      * 비밀번호 수정 요청 처리 함수
      */
+    // password-edit.js 파일에서 handlePasswordUpdate 함수 수정
     async function handlePasswordUpdate(e) {
         e.preventDefault();
+        
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = passwordInput.value;
+        const passwordCheck = passwordCheckInput.value;
+        
+        // 유효성 검사
+        if (!currentPassword) {
+            showErrorMessage(document.getElementById('currentPasswordHelperText'), '* 현재 비밀번호를 입력해주세요');
+            return;
+        }
         
         if (!validatePassword() || !validatePasswordCheck()) {
             return;
         }
         
         try {
-            // 비밀번호 수정 API 호출
-            const result = await changePassword(
-                // 현재 구현에서는 currentPassword 파라미터가 필요하지만,
-                // 피그마 디자인에는 현재 비밀번호 필드가 없으므로 새 비밀번호만 보냄
-                passwordInput.value, // 임시로 현재 비밀번호 대신 사용
-                passwordInput.value,
-                passwordCheckInput.value
-            );
+            // 비밀번호 수정 API 직접 호출
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/users/password`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    currentPassword: currentPassword,
+                    newPassword: newPassword,
+                    passwordCheck: passwordCheck
+                })
+            });
             
-            if (result.success) {
+            const data = await response.json();
+            
+            if (response.ok) {
                 // 비밀번호 수정 성공
                 resetForm();
                 showToastMessage();
             } else {
                 // 비밀번호 수정 실패
-                handlePasswordUpdateError(result);
+                if (data.errors && data.errors.length > 0) {
+                    data.errors.forEach(error => {
+                        if (error.field === 'currentPassword') {
+                            showErrorMessage(document.getElementById('currentPasswordHelperText'), error.message);
+                        } else if (error.field === 'newPassword') {
+                            showErrorMessage(passwordHelperText, error.message);
+                        } else if (error.field === 'passwordCheck') {
+                            showErrorMessage(passwordCheckHelperText, error.message);
+                        }
+                    });
+                } else {
+                    alert(data.message || '비밀번호 수정에 실패했습니다.');
+                }
             }
         } catch (error) {
             console.error('비밀번호 수정 요청 오류:', error);
@@ -174,8 +205,10 @@ document.addEventListener('DOMContentLoaded', function() {
      * 폼 초기화 함수
      */
     function resetForm() {
+        document.getElementById('currentPassword').value = '';
         passwordInput.value = '';
         passwordCheckInput.value = '';
+        hideErrorMessage(document.getElementById('currentPasswordHelperText'));
         hideErrorMessage(passwordHelperText);
         hideErrorMessage(passwordCheckHelperText);
         submitButton.classList.remove('active');
