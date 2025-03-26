@@ -64,22 +64,34 @@ async function loginUser(email, password) {
 // 회원가입 API 호출 함수
 async function signupUser(userData) {
     try {
-        // FormData 객체인 경우와 JSON 객체인 경우 처리
         let options = {
-            method: 'POST'
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         };
         
+        // FormData에서 JSON 객체로 변환
         if (userData instanceof FormData) {
-            options.body = userData;
+            const jsonData = {};
+            for (const [key, value] of userData.entries()) {
+                // 프로필 이미지는 base64 문자열로 변환 또는 URL로 처리
+                if (key === 'profileImage' && value instanceof File) {
+                    // 이미지 파일이 있는 경우 base64로 변환 (선택적)
+                    // 또는 profileImage 필드를 제외하고 별도 처리
+                    continue; // 일단 이미지는 제외하고 처리
+                } else {
+                    jsonData[key] = value;
+                }
+            }
+            options.body = JSON.stringify(jsonData);
         } else {
-            options.headers = {
-                'Content-Type': 'application/json'
-            };
             options.body = JSON.stringify(userData);
         }
         
         const response = await fetch(`${API_BASE_URL}/users/signup`, options);
         
+        // 나머지 코드...
         const data = await response.json();
         
         if (response.ok) {

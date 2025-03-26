@@ -246,20 +246,19 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 모든 필드가 유효하면 회원가입 진행
         if (Object.values(formValidity).every(value => value === true)) {
-            // FormData 객체 생성하여 데이터 추가
-            const formData = new FormData();
-            formData.append('email', emailInput.value.trim());
-            formData.append('password', passwordInput.value);
-            formData.append('passwordCheck', passwordCheckInput.value);
-            formData.append('nickname', nicknameInput.value.trim());
-            
-            if (uploadedImage) {
-                formData.append('profileImage', uploadedImage);
-            }
+            // JSON 객체로 데이터 생성
+            const signupData = {
+                email: emailInput.value.trim(),
+                password: passwordInput.value,
+                passwordCheck: passwordCheckInput.value,
+                nickname: nicknameInput.value.trim(),
+                // 프로필 이미지는 백엔드가 JSON 형식으로 처리할 수 없으므로 제외
+                // 이미지는 별도 API로 처리하거나 백엔드를 수정해야 함
+            };
             
             try {
                 // 회원가입 API 호출
-                const result = await signupUser(formData);
+                const result = await signupUser(signupData);
                 
                 if (result.success) {
                     // 회원가입 성공
