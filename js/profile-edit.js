@@ -243,17 +243,42 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function handleUserWithdraw() {
         try {
-            // 회원 탈퇴 API 호출
-            const result = await withdrawUser();
+            // 토큰 가져오기
+            const token = localStorage.getItem('token');
+            if (!token) {
+                alert('로그인 정보가 없습니다. 다시 로그인해주세요.');
+                window.location.href = 'login.html';
+                return;
+            }
+    
+            // 회원 탈퇴 API 직접 호출
+            const response = await fetch(`${API_BASE_URL}/user`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             
-            if (result.success) {
-                // 탈퇴 성공 시 로그아웃 처리 후 로그인 페이지로 이동
+            // 응답 데이터 확인
+            const data = await response.json();
+            console.log('회원 탈퇴 응답:', data);
+            
+            if (response.ok) {
+                // 회원 탈퇴 성공 시 로그아웃 처리
                 alert('회원 탈퇴가 완료되었습니다.');
-                await logoutUser(); // 로그아웃 처리
+                
+                // 로컬 스토리지에서 사용자 데이터 삭제
+                localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('userId');
+                localStorage.removeItem('nickname');
+                localStorage.removeItem('profileImageUrl');
+                
+                // 로그인 페이지로 이동
                 window.location.href = 'login.html';
             } else {
-                // 탈퇴 실패 시 오류 메시지 표시
-                alert(result.message || '회원 탈퇴에 실패했습니다.');
+                // 회원 탈퇴 실패 시 오류 메시지 표시
+                alert(data.message || '회원 탈퇴에 실패했습니다.');
                 withdrawModal.style.display = 'none';
             }
         } catch (error) {
